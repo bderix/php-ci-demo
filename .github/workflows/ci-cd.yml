@@ -2,9 +2,9 @@ name: PHP CI/CD Demo
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
 
 jobs:
   ci:
@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: PHP einrichten
         uses: shivammathur/setup-php@v2
@@ -24,20 +24,20 @@ jobs:
       - name: Composer installieren
         run: composer install --no-interaction --no-progress --prefer-dist
 
-      - name: Tests ausführen
+      - name: Tests ausfÃ¼hren
         run: vendor/bin/phpunit
 
   deploy:
     name: Deploy nach Server
     needs: ci
     runs-on: ubuntu-latest
-    if: github.ref == "refs/heads/main" && github.event_name == "push"
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
 
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
-      - name: Composer ohne Dev-Abhängigkeiten
+      - name: Composer ohne Dev-AbhÃ¤ngigkeiten
         run: composer install --no-dev --no-interaction --no-progress --prefer-dist
 
       - name: SSH Key vorbereiten
