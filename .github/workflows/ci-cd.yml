@@ -28,7 +28,6 @@ jobs:
         run: vendor/bin/phpunit tests
 
   deploy:
-    name: Deploy nach Server
     needs: ci
     runs-on: ubuntu-latest
     if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
@@ -40,16 +39,10 @@ jobs:
       - name: Composer ohne Dev-Abhängigkeiten
         run: composer install --no-dev --no-interaction --no-progress --prefer-dist
 
-      - name: SSH Key vorbereiten
+      - name: Build Artifact (Zip)
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+          zip -r build.zip . -x ".git/*" ".github/*"
 
-      - name: Deploy per rsync
+      - name: „Deployment“ loggen
         run: |
-          rsync -az --delete \
-            --exclude=".git" \
-            --exclude=".github" \
-            ./ "${{ secrets.SSH_USER }}"@"${{ secrets.SSH_HOST }}":"${{ secrets.SSH_PATH }}"
+          echo "Würde jetzt build.zip auf einen Server deployen..."
