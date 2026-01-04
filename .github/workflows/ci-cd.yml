@@ -1,0 +1,55 @@
+name: PHP CI/CD Demo
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  ci:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v5
+
+      - name: PHP einrichten
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      - name: Composer installieren
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Tests ausführen
+        run: vendor/bin/phpunit
+
+  deploy:
+    name: Deploy nach Server
+    needs: ci
+    runs-on: ubuntu-latest
+    if: github.ref == "refs/heads/main" && github.event_name == "push"
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v5
+
+      - name: Composer ohne Dev-Abhängigkeiten
+        run: composer install --no-dev --no-interaction --no-progress --prefer-dist
+
+      - name: SSH Key vorbereiten
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy per rsync
+        run: |
+          rsync -az --delete \
+            --exclude=".git" \
+            --exclude=".github" \
+            ./ "${{ secrets.SSH_USER }}"@"${{ secrets.SSH_HOST }}":"${{ secrets.SSH_PATH }}"
