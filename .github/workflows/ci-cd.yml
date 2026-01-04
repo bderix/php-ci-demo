@@ -25,7 +25,7 @@ jobs:
         run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Tests ausführen
-        run: vendor/bin/phpunit
+        run: vendor/bin/phpunit tests
 
   deploy:
     name: Deploy nach Server
